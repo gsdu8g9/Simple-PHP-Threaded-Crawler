@@ -34,7 +34,7 @@
  * @author S.C. Chen <me578022@gmail.com>
  * @author John Schlick
  * @author Rus Carroll
- * @version 1.5 ($Rev: 208 $)
+ * @version 1.5 ($Rev: 210 $)
  * @package PlaceLocalInclude
  * @subpackage simple_html_dom
  */
@@ -68,40 +68,20 @@ define('MAX_FILE_SIZE', 600000);
 // -----------------------------------------------------------------------------
 // get html dom from file
 // $maxlen is defined in the code as PHP_STREAM_COPY_ALL which is defined as -1.
-
 function file_get_html($url, $use_include_path = false, $context=null, $offset = -1, $maxLen=-1, $lowercase = true, $forceTagsClosed=true, $target_charset = DEFAULT_TARGET_CHARSET, $stripRN=true, $defaultBRText=DEFAULT_BR_TEXT, $defaultSpanText=DEFAULT_SPAN_TEXT)
 {
-	$ua = userAgent();
-	$proxy = proxy();
-
-	$opts = array('http' =>
-			array(
-					'method'  => 'GET',
-					'timeout' => 30,
-					'header' => "User-Agent: " . $ua,
-					'proxy' => $proxy,
-					'request_fulluri' => true
-			)
-	);
-	$context  = stream_context_create($opts);
-	
 	// We DO force the tags to be terminated.
 	$dom = new simple_html_dom(null, $lowercase, $forceTagsClosed, $target_charset, $stripRN, $defaultBRText, $defaultSpanText);
 	// For sourceforge users: uncomment the next line and comment the retreive_url_contents line 2 lines down if it is not already done.
-	$contents = @file_get_contents($url, $use_include_path, $context, $offset);
+	$contents = file_get_contents($url, $use_include_path, $context, $offset);
 	// Paperg - use our own mechanism for getting the contents as we want to control the timeout.
 	//$contents = retrieve_url_contents($url);
-	for ($i = 1; empty($contents) && $i<5; $i++)
-	{
-		$contents = @file_get_contents($url, $use_include_path, $context, $offset);
-	}
-	if(empty($contents) || strlen($contents) > MAX_FILE_SIZE)
+	if (empty($contents) || strlen($contents) > MAX_FILE_SIZE)
 	{
 		return false;
 	}
 	// The second parameter can force the selectors to all be lowercase.
 	$dom->load($contents, $lowercase, $stripRN);
-
 	return $dom;
 }
 
@@ -164,10 +144,10 @@ class simple_html_dom_node
 	// clean up memory due to php5 circular references memory leak...
 	function clear()
 	{
-		unset($this->dom);
-		unset($this->parent);
-		unset($this->parent);
-		unset($this->children);
+		$this->dom = null;
+		$this->nodes = null;
+		$this->parent = null;
+		$this->children = null;
 	}
 
 	// dump node's tree
@@ -755,7 +735,7 @@ class simple_html_dom_node
 			case 'innertext': return $this->innertext();
 			case 'plaintext': return $this->text();
 			case 'xmltext': return $this->xmltext();
-			default: return @array_key_exists($name, $this->attr);
+			default: return array_key_exists($name, $this->attr);
 		}
 	}
 
@@ -1152,17 +1132,13 @@ class simple_html_dom
 	// clean up memory due to php5 circular references memory leak...
 	function clear()
 	{
-		if(is_array($this->nodes))
-		{
-			foreach ($this->nodes as $n) {$n->clear(); unset($n);}
-			// This add next line is documented in the sourceforge repository. 2977248 as a fix for ongoing memory leaks that occur even with the use of clear.
-			if (isset($this->children)) foreach ($this->children as $n) {$n->clear(); unset($n);}
-			if (isset($this->parent)) {$this->parent->clear(); unset($this->parent);}
-			if (isset($this->root)) {$this->root->clear(); unset($this->root);}
-			unset($this->doc);
-			unset($this->noise);
-		}
-	
+		foreach ($this->nodes as $n) {$n->clear(); $n = null;}
+		// This add next line is documented in the sourceforge repository. 2977248 as a fix for ongoing memory leaks that occur even with the use of clear.
+		if (isset($this->children)) foreach ($this->children as $n) {$n->clear(); $n = null;}
+		if (isset($this->parent)) {$this->parent->clear(); unset($this->parent);}
+		if (isset($this->root)) {$this->root->clear(); unset($this->root);}
+		unset($this->doc);
+		unset($this->noise);
 	}
 
 	function dump($show_attr=true)
@@ -1244,7 +1220,7 @@ class simple_html_dom
 
 		if (empty($charset))
 		{
-			$el = $this->root->find('meta[http-equiv=Content-Type]',0);
+			$el = $this->root->find('meta[http-equiv=Content-Type]',0, true);
 			if (!empty($el))
 			{
 				$fullvalue = $el->content;
@@ -1252,7 +1228,7 @@ class simple_html_dom
 
 				if (!empty($fullvalue))
 				{
-					$success = preg_match('/charset=(.+)/', $fullvalue, $matches);
+					$success = preg_match('/charset=(.+)/i', $fullvalue, $matches);
 					if ($success)
 					{
 						$charset = $matches[1];
