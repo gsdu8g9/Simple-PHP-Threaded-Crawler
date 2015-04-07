@@ -2,7 +2,7 @@
 class Link
 {
 
-	 // podaci za konekciju na bazu
+	 // info for db connection
 	protected $db_host = 'localhost';
 	protected $db_user = 'root';
 	protected $db_pass = 'root';
@@ -16,14 +16,18 @@ class Link
 		$this->db_connect();
 	}
 
-	// Conect to database
+	/*
+	 * Conect to database
+	 */
 	private function db_connect()
 	{
 		$this->mysqli = new mysqli( $this->db_host, $this->db_user, $this->db_pass, $this->db_name, $this->port) or die("db error");
 	}
 	
 	/*
+	 * input: url
 	 * Insert url in db
+	 * output: -
 	 */
 	private function insertLink($url)
 	{
@@ -40,7 +44,9 @@ class Link
 	}
 	
 	/*
-	 * get all
+	 * input: -
+	 * get all inserted urls from db
+	 * output: urls (as array)
 	*/
 	public function arrayLink()
 	{
@@ -58,7 +64,11 @@ class Link
 	    return $a;
 	}
 	
-	// is already in db
+	/*
+	 * input: url
+	 * Is that url already in db
+	 * output: true or false (boolean)
+	 */ 
 	private function checkLink($url)
 	{
 		$query = $this->mysqli->real_escape_string("SELECT `url` FROM `urls` WHERE `url` = ? LIMIT 1");
@@ -73,7 +83,9 @@ class Link
 	}
 	
 	/*
-	* get link from ID
+	 * input: id (int)
+ 	 * get url with that ID
+ 	 * output: url or false if it isnt found
 	 */
 	private function getThisLink($id)
 	{
@@ -105,7 +117,9 @@ class Link
 	}
 	
 	/*
-	 *  is checked link
+	 * input: url
+	 * did we already crawl that link ?
+	 * output: true or false (boolean)
 	 */
 	private function isCheckedLink($url)
 	{
@@ -124,7 +138,10 @@ class Link
 	}
 	
 	/*
-	 * Setting link to checked
+	 * input: url
+	 * Marking link as checked, that crawling of that page is done
+	 * output: -
+	 * 
 	*/
 	private function setCheckedLink($url)
 	{

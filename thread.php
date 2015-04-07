@@ -23,28 +23,32 @@ class Process extends Thread {
 	protected $counter;
 
 	// konstruktor
-	public function __construct($website_url, $trigger, Counter $counter )
+	public function __construct($website_url, $mandatory, Counter $counter )
 	{
 		$this->website_url = $website_url;
-		$this->trigger = $trigger;
+		$this->mandatory = $mandatory;
 		$this->counter = $counter;
 		
 	}
 	
-	// pokretanje threada
-	public function run() {	
+	// thread
+	public function run() 
+	{
 			
 		$address = new Link();
+		$lastID  = 6000;
 
-		while (($job = $this->counter->increment() <= 6000))
+		while (($job = $this->counter->increment() <= $lastID))
 		{
-						
+			set_time_limit(30); // reset max execution time of page
+			
 			$url = $address->getLink($this->counter->value);
+			
 			if($address->isChecked($url) == false )
 			{
 				if($url)
 				{
-					crawl_site($url, $this->trigger);
+					crawl_site($url, $this->mandatory);
 				}
 			}
 		}

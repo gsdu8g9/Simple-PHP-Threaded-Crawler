@@ -19,31 +19,31 @@
  * http://simplehtmldom.sourceforge.net/
  * 
  */
-include('./simple_html_dom.php'); // "Simple HTML DOM Parser"
-include('./thread.php');
-include('./link.php');
-include('./fullurl.php'); // for making nice absolute url
+include('./simple_html_dom.php'); 	// "Simple HTML DOM Parser"
+include('./thread.php');			// 
+include('./link.php');				//
+include('./fullurl.php'); 			// for making nice absolute url
 
-set_time_limit(0);
+set_time_limit(30); // time limit is refreshed in thread.php
 
 // Website to crawl
 $url="http://www.example.com";
 /* 
- * $trigger = every page needs to contain this part of code in url
+ * $mandatory = every page needs to contain this part of code in url
  * it prevents crawler to check links outside website
 */
-$trigger="example.com";
+$mandatory="example.com";
 
 
 /*
  * crawling function
  */
-function crawl_site($website_url,$trigger)
+function crawl_site($website_url,$mandatory)
 {	
 
 	$link = new Link();
 	
-	if(!strpos($website_url,$trigger)) return false;
+	if(!strpos($website_url,$mandatory)) return false;
 
 	$html = file_get_html($website_url);
 	
@@ -62,7 +62,7 @@ function crawl_site($website_url,$trigger)
 			$url = explode("#", $url);
 			$url = $url['0'];
 
-			if(strpos($url,$trigger) && $link->check($url) == false)
+			if(strpos($url,$mandatory) && $link->check($url) == false)
 			{
 				 $link->insert($url);
 			}
@@ -76,18 +76,18 @@ function crawl_site($website_url,$trigger)
 }
 
 
-function main($website_url,$trigger)
+function main($website_url,$mandatory)
 {
 
-	crawl_site($website_url, $trigger);
+	crawl_site($website_url, $mandatory);
 	
 	$counter = new Counter();
 
 	$jobs = array(
-		new Process($website_url, $trigger, $counter),
-		new Process($website_url, $trigger, $counter),
-		new Process($website_url, $trigger, $counter),
-		new Process($website_url, $trigger, $counter)
+		new Process($website_url, $mandatory, $counter),
+		new Process($website_url, $mandatory, $counter),
+		new Process($website_url, $mandatory, $counter),
+		new Process($website_url, $mandatory, $counter)
 	);
 
 	foreach ($jobs as $job)
@@ -99,7 +99,7 @@ function main($website_url,$trigger)
 
 
 // lets crawl !
-main($url,$trigger);
+main($url,$mandatory);
 
 
 ?>
